@@ -1,0 +1,7 @@
+data/*
+tiles/*
+
+Pipfile
+Pipfile.lock
+
+scratch.py
