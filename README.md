@@ -39,4 +39,6 @@ merging the rasters into a single file makes for a very big file (>7 GB).
 This uses the Mapzen terrarium encoding in `create_tiles.py`.
 
 Elevation tiles for zooms 0 - 10 take about 9.5 hours to create. Currently in Mapbox GL JS,
-these only render correctly to about zoom 7.
+these only render correctly to about zoom 7. There appears to be linear chatter in
+the derived elevation output; we don't know yet if this comes from the underlying
+GEBCO data or the WarpedVRT resampling used to create the tiles.

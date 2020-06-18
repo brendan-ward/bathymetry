@@ -12,26 +12,7 @@ import numpy as np
 import rasterio
 from rasterio.features import sieve
 
-
-BINS = [
-    0,
-    10,
-    25,
-    50,
-    100,
-    200,
-    500,
-    1000,
-    2000,
-    3000,
-    4000,
-    5000,
-    6000,
-    7000,
-    8000,
-    9000,
-    20000,  # min depth observed in dataset is -10952
-]
+from bathymetry.constants import BINS
 
 # minimum number of pixels per polygon
 MIN_PIXELS = 100

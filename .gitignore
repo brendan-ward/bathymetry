@@ -1,7 +1,10 @@
 data/*
 tiles/*
+ARCHIVE/*
 
 Pipfile
 Pipfile.lock
+*.egg-info/*
+__pycache__
 
 scratch.py
