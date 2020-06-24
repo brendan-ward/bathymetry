@@ -64,37 +64,37 @@ def tile_renderer(tile_data):
     return buf.read()
 
 
-### Render global scale using lower resolution data (~45 sec)
-tif_to_mbtiles(
-    "data/depth/depth_15min_bilinear.tif",
-    "tiles/depth_cubic_0_1.mbtiles",
-    0,
-    1,
-    tile_size=512,
-    metadata={
-        "name": "global bathymetry",
-        "version": "1.0.0",
-        "attribution": "GEBCO Compilation Group (2020) GEBCO 2020 Grid",
-    },
-    tile_renderer=tile_renderer,
-    resampling="cubic",
-)
+# ### Render global scale using lower resolution data (~45 sec)
+# tif_to_mbtiles(
+#     "data/depth/depth_15min_bilinear.tif",
+#     "tiles/depth_cubic_0_1.mbtiles",
+#     0,
+#     1,
+#     tile_size=512,
+#     metadata={
+#         "name": "global bathymetry",
+#         "version": "1.0.0",
+#         "attribution": "GEBCO Compilation Group (2020) GEBCO 2020 Grid",
+#     },
+#     tile_renderer=tile_renderer,
+#     resampling="cubic",
+# )
 
-### Render mid zooms using medium resolution (~9 min)
-tif_to_mbtiles(
-    "data/depth/depth_1min_bilinear.tif",
-    "tiles/depth_cubic_2_3.mbtiles",
-    2,
-    3,
-    tile_size=512,
-    metadata={
-        "name": "global bathymetry",
-        "version": "1.0.0",
-        "attribution": "GEBCO Compilation Group (2020) GEBCO 2020 Grid",
-    },
-    tile_renderer=tile_renderer,
-    resampling="cubic",
-)
+# ### Render mid zooms using medium resolution (~9 min)
+# tif_to_mbtiles(
+#     "data/depth/depth_1min_bilinear.tif",
+#     "tiles/depth_cubic_2_3.mbtiles",
+#     2,
+#     3,
+#     tile_size=512,
+#     metadata={
+#         "name": "global bathymetry",
+#         "version": "1.0.0",
+#         "attribution": "GEBCO Compilation Group (2020) GEBCO 2020 Grid",
+#     },
+#     tile_renderer=tile_renderer,
+#     resampling="cubic",
+# )
 
 
 ### Render higher zooms using higher resolution data (~3+ hours)
@@ -125,3 +125,21 @@ tif_to_mbtiles(
 
 # with MBtiles(target_filename, "r+") as out:
 #     out.meta["minzoom"] = 0
+
+
+### Render blue earth data
+
+tif_to_mbtiles(
+    "data/depth/blue_earth/blue_earth.tif",
+    "tiles/depth_blue_earth.mbtiles",
+    0,
+    8,
+    tile_size=512,
+    metadata={
+        "name": "global bathymetry",
+        "version": "1.0.0",
+        "attribution": "GEBCO Compilation Group (2020) GEBCO 2020 Grid / Blue Earth Bathymetry (Tom Patterson, 2020)",
+    },
+    tile_renderer=tile_renderer,
+    resampling="cubic",
+)

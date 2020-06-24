@@ -9,9 +9,14 @@ GEBCO 2020 data were downloaded from: https://www.gebco.net/data_and_products/gr
 
 GEBCO 2020 provides global coverage of elevation data on a 15 arc-second grid.
 
+Blue Earth Bathymetry data were downloaded from: http://www.shadedrelief.com/blue-earth/
+on 6/23/2020.
+
 ### Data Credits
 
 GEBCO Compilation Group (2020) GEBCO 2020 Grid (doi:10.5285/a29c5465-b138-234d-e053-6c86abc040b9)
+
+Blue Earth Bathymetry data were processed by Tom Patterson.
 
 ## Dependencies
 

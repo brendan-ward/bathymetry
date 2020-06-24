@@ -7,4 +7,4 @@ Pipfile.lock
 *.egg-info/*
 __pycache__
 
-scratch.py
+scratch/*

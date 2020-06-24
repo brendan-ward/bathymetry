@@ -22,7 +22,7 @@ data_dir = Path("data")
 
 
 ### Read in each source, and crop it to <= 0 depth
-for filename in (data_dir / "source").glob("*.tif"):
+for filename in (data_dir / "source/gebco").glob("*.tif"):
     print(f"Processing {filename}")
     src = rasterio.open(filename)
     data = src.read(1)
@@ -34,7 +34,7 @@ for filename in (data_dir / "source").glob("*.tif"):
     # "nodata": 0,
     # NOTE: we keep 0's as valid so they don't break the mapbox elevation decoder
     meta.update({"driver": "GTIFF"})
-    with rasterio.open(data_dir / "depth" / filename.name, "w", **meta) as out:
+    with rasterio.open(data_dir / "depth/gebco" / filename.name, "w", **meta) as out:
         out.write_band(1, data)
 
     # convert everthing from elevation (negative) to depth (positive)
@@ -54,7 +54,7 @@ for filename in (data_dir / "source").glob("*.tif"):
     meta = src.meta.copy()
     meta.update({"dtype": "uint8", "nodata": 0})
 
-    with rasterio.open(data_dir / "binned" / filename.name, "w", **meta) as out:
+    with rasterio.open(data_dir / "binned/gebco" / filename.name, "w", **meta) as out:
         out.write_band(1, data)
 
 
