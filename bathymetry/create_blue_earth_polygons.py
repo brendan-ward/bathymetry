@@ -85,6 +85,7 @@ out_dir = Path("data/poly/blue_earth")
 
 
 inputs = [
+    "blue_earth_8x.tif",
     "blue_earth_4x.tif",
     "blue_earth_2x.tif",
     "blue_earth.tif",
