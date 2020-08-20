@@ -13,11 +13,6 @@ from pyogrio.geopandas import write_dataframe
 from bathymetry.constants import BINS
 
 
-# SCALE_FACTOR = 8
-# minimum number of pixels per polygon
-MIN_PIXELS = 1000
-
-
 def create_polygons(data, transform):
     """Create polygons from data based on spatial coordinates specified by
     transform.
@@ -52,52 +47,60 @@ def create_polygons(data, transform):
     return gp.GeoDataFrame({"geometry": polygons, "bin": values}, crs="EPSG:4326")
 
 
+def create_polygons_chunked(data):
+    """Divide the data up into quadrants, create polygons from each, then merge
+
+    Parameters
+    ----------
+    data : ndarray
+    """
+    y_split = data.shape[0] // 2
+    x_split = data.shape[1] // 2
+
+    # -180:0,90:0
+    chunk = data[:y_split, :x_split]
+    df = create_polygons(chunk, src.transform)
+    merged = df
+
+    # 0:180,90:0
+    chunk = data[:y_split, x_split:]
+    df = create_polygons(chunk, src.transform * A.translation(x_split, 0))
+    merged = merged.append(df)
+
+    # -180:0,0:-90
+    chunk = data[y_split:, :x_split]
+    df = create_polygons(chunk, src.transform * A.translation(0, y_split))
+    merged = merged.append(df)
+
+    # 0:180,0:-90
+    chunk = data[y_split:, x_split:]
+    df = create_polygons(chunk, src.transform * A.translation(x_split, y_split))
+    merged = merged.append(df)
+
+    return merged
+
+
 src_dir = Path("data/binned/blue_earth")
 out_dir = Path("data/poly/blue_earth")
 
 
-# TODO: can use the VRT and convert polygons in smaller chunks
-# just need to set transform correctly
+inputs = [
+    "blue_earth_4x.tif",
+    "blue_earth_2x.tif",
+    "blue_earth.tif",
+]
 
-src = rasterio.open(src_dir / "blue_earth.tif")
-data = src.read(1)
+for filename in inputs:
+    print("Processing", filename)
+    src = rasterio.open(src_dir / filename)
+    data = src.read(1)
 
-start = time()
+    start = time()
 
-y_split = data.shape[0] // 2
-x_split = data.shape[1] // 2
+    df = create_polygons_chunked(data)
+    df["depth"] = df.bin.map({i: v for i, v in enumerate(BINS)}).astype("uint16")
 
-# -180:0,90:0
-chunk = data[:y_split, :x_split]
-df = create_polygons(chunk, src.transform)
-merged = df
+    print(f"{len(df)} polygons created in {time() - start:.2f}s")
 
-# 0:180,90:0
-chunk = data[:y_split, x_split:]
-df = create_polygons(chunk, src.transform * A.translation(x_split, 0))
-merged = merged.append(df)
-
-# -180:0,0:-90
-chunk = data[y_split:, :x_split]
-df = create_polygons(chunk, src.transform * A.translation(0, y_split))
-merged = merged.append(df)
-
-# 0:180,0:-90
-chunk = data[y_split:, x_split:]
-df = create_polygons(chunk, src.transform * A.translation(x_split, y_split))
-merged = merged.append(df)
-
-df = merged
-print(f"{len(df)} polygons created in {time() - start:.2f}s")
-
-df["depth"] = df.bin.map({i: v for i, v in enumerate(BINS)}).astype("uint16")
-
-
-write_dataframe(df, str(out_dir / "blue_earth.shp"))
-
-# TODO: write polygons for tippecanoe map tiles
-write_dataframe(df, "/tmp/blue_earth.json", driver="GeoJSONSeq")
-
-
-# create tiles
-# tippecanoe -f -pg -Z 0 -z 8 -P --drop-smallest-as-needed  --detect-shared-borders --simplification=4 -o tiles/depth_contours_blue_earth.mbtiles -l "depth" /tmp/blue_earth.json
+    outfilename = filename.replace(".tif", ".gpkg")
+    write_dataframe(df, str(out_dir / outfilename), driver="GPKG")

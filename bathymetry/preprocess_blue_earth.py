@@ -48,3 +48,34 @@ meta.update({"dtype": "uint8", "nodata": 0})
 with rasterio.open(data_dir / "binned/blue_earth/blue_earth.tif", "w", **meta) as out:
     out.write_band(1, data)
 
+
+### Sieve again to remove fine detail
+# sieve out any areas < min_poly_pixels
+sieved = sieve(data, size=1000)
+
+# stamp back in the areas of 0 (could be islands) even if small
+data = np.where(data == 0, 0, sieved)
+
+meta = src.meta.copy()
+meta.update({"dtype": "uint8", "nodata": 0})
+
+with rasterio.open(
+    data_dir / "binned/blue_earth/blue_earth_1000.tif", "w", **meta
+) as out:
+    out.write_band(1, data)
+
+
+# sieve out any areas < min_poly_pixels
+sieved = sieve(data, size=10000)
+
+# stamp back in the areas of 0 (could be islands) even if small
+data = np.where(data == 0, 0, sieved)
+
+meta = src.meta.copy()
+meta.update({"dtype": "uint8", "nodata": 0})
+
+with rasterio.open(
+    data_dir / "binned/blue_earth/blue_earth_10000.tif", "w", **meta
+) as out:
+    out.write_band(1, data)
+
