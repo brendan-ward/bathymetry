@@ -8,6 +8,7 @@ from time import time
 import numpy as np
 import rasterio
 from rasterio.features import sieve
+from rasterio.warp import reproject, Resampling
 
 from bathymetry.constants import BINS
 
@@ -49,33 +50,89 @@ with rasterio.open(data_dir / "binned/blue_earth/blue_earth.tif", "w", **meta) a
     out.write_band(1, data)
 
 
-### Sieve again to remove fine detail
-# sieve out any areas < min_poly_pixels
-sieved = sieve(data, size=1000)
+### 2x: Resample and sieve to coarser resolution
+scale_factor = 2
+scaled = np.zeros(
+    shape=(src.width // scale_factor, src.height // scale_factor), dtype=data.dtype
+)
+_, transform = reproject(
+    data,
+    scaled,
+    src_transform=src.transform,
+    src_crs=src.crs,
+    dst_crs=src.crs,
+    resampling=Resampling.nearest,
+)
 
-# stamp back in the areas of 0 (could be islands) even if small
-data = np.where(data == 0, 0, sieved)
+# sieve out fine detail
+scaled = sieve(scaled, size=10)
 
-meta = src.meta.copy()
-meta.update({"dtype": "uint8", "nodata": 0})
-
-with rasterio.open(
-    data_dir / "binned/blue_earth/blue_earth_1000.tif", "w", **meta
-) as out:
-    out.write_band(1, data)
-
-
-# sieve out any areas < min_poly_pixels
-sieved = sieve(data, size=10000)
-
-# stamp back in the areas of 0 (could be islands) even if small
-data = np.where(data == 0, 0, sieved)
-
-meta = src.meta.copy()
-meta.update({"dtype": "uint8", "nodata": 0})
+scaled_meta = meta.copy()
+scaled_meta.update(
+    {"width": scaled.shape[1], "height": scaled.shape[0], "transform": transform}
+)
 
 with rasterio.open(
-    data_dir / "binned/blue_earth/blue_earth_10000.tif", "w", **meta
+    data_dir / "binned/blue_earth/blue_earth_2x.tif", "w", **scaled_meta
 ) as out:
-    out.write_band(1, data)
+    out.write_band(1, scaled)
+
+### 4x: Resample and sieve to coarser resolution
+scale_factor = 2
+scaled_height, scaled_width = scaled.shape
+scaled_4x = np.zeros(
+    shape=(scaled_width // scale_factor, scaled_height // scale_factor),
+    dtype=data.dtype,
+)
+_, transform = reproject(
+    scaled,
+    scaled_4x,
+    src_transform=transform,
+    src_crs=src.crs,
+    dst_crs=src.crs,
+    resampling=Resampling.nearest,
+)
+
+# sieve out fine detail
+scaled_4x = sieve(scaled_4x, size=100)
+
+scaled_meta = meta.copy()
+scaled_meta.update(
+    {"width": scaled_4x.shape[1], "height": scaled_4x.shape[0], "transform": transform}
+)
+
+with rasterio.open(
+    data_dir / "binned/blue_earth/blue_earth_4x.tif", "w", **scaled_meta
+) as out:
+    out.write_band(1, scaled_4x)
+
+
+### 8x: Resample and sieve to coarser resolution
+scale_factor = 4
+scaled_height, scaled_width = scaled_4x.shape
+scaled_8x = np.zeros(
+    shape=(scaled_width // scale_factor, scaled_height // scale_factor),
+    dtype=data.dtype,
+)
+_, transform = reproject(
+    scaled_4x,
+    scaled_8x,
+    src_transform=transform,
+    src_crs=src.crs,
+    dst_crs=src.crs,
+    resampling=Resampling.nearest,
+)
+
+# sieve out fine detail
+scaled_8x = sieve(scaled_8x, size=10)
+
+scaled_meta = meta.copy()
+scaled_meta.update(
+    {"width": scaled_8x.shape[1], "height": scaled_8x.shape[0], "transform": transform}
+)
+
+with rasterio.open(
+    data_dir / "binned/blue_earth/blue_earth_8x.tif", "w", **scaled_meta
+) as out:
+    out.write_band(1, scaled_8x)
 
