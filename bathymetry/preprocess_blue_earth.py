@@ -3,7 +3,6 @@ Preprocess Blue Earth Bathymetry data.
 """
 
 from pathlib import Path
-from time import time
 
 import numpy as np
 import rasterio
@@ -16,9 +15,15 @@ from bathymetry.constants import BINS
 MIN_PIXELS = 100
 
 data_dir = Path("data")
+src_dir = data_dir / "source/blue_earth"
+depth_dir = data_dir / "depth/blue_earth"
+depth_dir.mkdir(exist_ok=True, parents=True)
+binned_dir = data_dir / "binned/blue_earth"
+binned_dir.mkdir(exist_ok=True, parents=True)
+
 
 ### Read in each source, and crop it to <= 0 depth
-src = rasterio.open(data_dir / "source/blue_earth/Blue-Earth-Bathymetry.tif")
+src = rasterio.open(src_dir / "Blue-Earth-Bathymetry.tif")
 data = src.read(1)
 
 # zero out everything >= 0
@@ -26,7 +31,7 @@ data[data > 0] = 0
 
 meta = src.meta.copy()
 meta.update({"driver": "GTIFF"})
-with rasterio.open(data_dir / "depth/blue_earth/blue_earth.tif", "w", **meta) as out:
+with rasterio.open(depth_dir / "blue_earth.tif", "w", **meta) as out:
     out.write_band(1, data)
 
 # convert everthing from elevation (negative) to depth (positive)
@@ -44,9 +49,9 @@ sieved = sieve(data, size=MIN_PIXELS)
 data = np.where(data == 0, 0, sieved)
 
 meta = src.meta.copy()
-meta.update({"dtype": "uint8", "nodata": 0})
+meta.update({"dtype": "uint8", "nodata": 255})
 
-with rasterio.open(data_dir / "binned/blue_earth/blue_earth.tif", "w", **meta) as out:
+with rasterio.open(binned_dir / "blue_earth.tif", "w", **meta) as out:
     out.write_band(1, data)
 
 
@@ -72,9 +77,7 @@ scaled_meta.update(
     {"width": scaled.shape[1], "height": scaled.shape[0], "transform": transform}
 )
 
-with rasterio.open(
-    data_dir / "binned/blue_earth/blue_earth_2x.tif", "w", **scaled_meta
-) as out:
+with rasterio.open(binned_dir / "blue_earth_2x.tif", "w", **scaled_meta) as out:
     out.write_band(1, scaled)
 
 ### 4x: Resample and sieve to coarser resolution
@@ -101,9 +104,7 @@ scaled_meta.update(
     {"width": scaled_4x.shape[1], "height": scaled_4x.shape[0], "transform": transform}
 )
 
-with rasterio.open(
-    data_dir / "binned/blue_earth/blue_earth_4x.tif", "w", **scaled_meta
-) as out:
+with rasterio.open(binned_dir / "blue_earth_4x.tif", "w", **scaled_meta) as out:
     out.write_band(1, scaled_4x)
 
 
@@ -131,8 +132,5 @@ scaled_meta.update(
     {"width": scaled_8x.shape[1], "height": scaled_8x.shape[0], "transform": transform}
 )
 
-with rasterio.open(
-    data_dir / "binned/blue_earth/blue_earth_8x.tif", "w", **scaled_meta
-) as out:
+with rasterio.open(binned_dir / "blue_earth_8x.tif", "w", **scaled_meta) as out:
     out.write_band(1, scaled_8x)
-
